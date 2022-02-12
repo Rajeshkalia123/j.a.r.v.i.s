@@ -3,8 +3,6 @@
 import sys
 import speech_recognition as sr
 import pyttsx3
-import pywhatkit
-import pywhatkit as kit
 import datetime
 import wikipedia
 import pyjokes
@@ -15,7 +13,6 @@ import os
 import cv2
 import random
 from requests import get
-import smtplib
 import psutil
 import instaloader
 import pyautogui
@@ -256,15 +253,8 @@ class MainThread(QThread):
                 ip = get('https://api.ipify.org').text
                 print(f"your IP address is {ip}")
                 self.talk(f"your IP address is {ip}")
-            #command for seading a whatsapp group and individual message
-            #Individual => Eg: send a message to sujith
-            #group => Eg: send a message to school group NOTE: mention the name "group" otherwise jarvis cannot detect the name
-            elif ('send a message' in self.command):
-                self.whatsapp(self.command)
-            #command for sending an email 
-            #Eg: jarvis send email
-            elif 'send email' in self.command:
-                self.verifyMail()
+            
+            
             #command for checking the temperature in surroundings
             #jarvis check the surroundings temperature
             elif "temperature" in self.command:
@@ -347,19 +337,7 @@ class MainThread(QThread):
         else:
             self.talk(f"good evening boss, its {day} and the time is {t}")
 
-    #Weather forecast
-    def temperature(self):
-        IP_Address = get('https://api.ipify.org').text
-        url = 'https://get.geojs.io/v1/ip/geo/'+IP_Address+'.json'
-        geo_reqeust = get(url)
-        geo_data = geo_reqeust.json()
-        city = geo_data['city']
-        search = f"temperature in {city}"
-        url_1 = f"https://www.google.com/search?q={search}"
-        r = get(url_1)
-        data = BeautifulSoup(r.text,"html.parser")
-        temp = data.find("div",class_="BNeawe").text
-        self.talk(f"current {search} is {temp}")
+    
     
     #qrCodeGenerator
     def qrCodeGenerator(self):
@@ -416,79 +394,9 @@ class MainThread(QThread):
         cv2.destroyAllWindows()
 
     
-    #covid 
-    def Covid(self,s):
-        try:
-            from covid_india import states
-            details = states.getdata()
-            if "check in" in s:
-                s = s.replace("check in","").strip()
-                print(s)
-            elif "check" in s:
-                s = s.replace("check","").strip()
-                print(s)
-            elif "tech" in s:
-                s = s.replace("tech","").strip()
-            s = state[s]
-            ss = details[s]
-            Total = ss["Total"]
-            Active = ss["Active"]
-            Cured = ss["Cured"]
-            Death = ss["Death"]
-            print(f"Boss the total cases in {s} are {Total}, the number of active cases are {Active}, and {Cured} people cured, and {Death} people are death")
-            self.talk(f"Boss the total cases in {s} are {Total}, the number of active cases are {Active}, and {Cured} people cured, and {Death} people are death")
-            time.sleep(5)
-            self.talk("Boss do you want any information of other states")
-            I = self.take_Command()
-            print(I)
-            if ("check" in I):
-                self.Covid(I)
-            elif("no" in I):
-                self.talk("Okay boss stay home stay safe")
-            else:
-                self.talk("Okay boss stay home stay safe")
-        except:
-            self.talk("Boss some error occured, please try again")
-            self.talk("Boss do you want any information of other states")
-            I = self.take_Command()
-            if("yes" in I):
-                self.talk("boss, Which state covid status do u want to check")
-                Sta = self.take_Command()
-                self.Covid(Sta)
-            elif("no" in I):
-                self.talk("Okay boss stay home stay safe")
-            else:
-                self.talk("Okay boss stay home stay safe")
+    
 
-    #Whatsapp
-    def whatsapp(self,command):
-        try:
-            command = command.replace('send a message to','')
-            command = command.strip()
-            name,numberID,F = self.SearchCont(command)
-            if F:
-                print(numberID)
-                self.talk(f'Boss, what message do you want to send to {name}')
-                message = self.take_Command()
-                hour = int(datetime.datetime.now().hour)
-                min = int(datetime.datetime.now().minute)
-                print(hour,min)
-                if "group" in command:
-                    kit.sendwhatmsg_to_group(numberID,message,int(hour),int(min)+1)
-                else:
-                    kit.sendwhatmsg(numberID,message,int(hour),int(min)+1)
-                self.talk("Boss message have been sent")
-            if F==False:
-                self.talk(f'Boss, the name not found in our data base, shall I add the contact')
-                AddOrNot = self.take_Command()
-                print(AddOrNot)
-                if ("yes" in AddOrNot) or ("add" in AddOrNot) or ("yeah" in AddOrNot) or ("yah" in AddOrNot):
-                    self.AddContact()
-                elif("no" in AddOrNot):
-                    self.talk('Ok Boss')
-        except:
-            print("Error occured, please try again")
-
+    
     
     #Add contacts
     def AddContact(self):
@@ -980,15 +888,6 @@ class MainThread(QThread):
             print(e)
             self.talk("Sorry sir I am not not able to send this email")
     
-    #Email Sender
-    def SendEmail(self,to,content):
-        print(content)
-        server = smtplib.SMTP('smtp.gmail.com',587)
-        server.ehlo()
-        server.starttls()
-        server.login("YOUR_MAIL_ID","PASWORD")
-        server.sendmail("YOUR_MAIL_ID",to,content)
-        server.close()
 
     #location
     def locaiton(self):
